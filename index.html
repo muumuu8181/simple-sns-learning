@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleSNS - SNS学習アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            position: relative;
+        }
+
+        .version {
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .auth-section {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .main-app {
+            display: none;
+        }
+
+        .post-form {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+        }
+
+        .post-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .post-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .char-count {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .char-count.warning {
+            color: #ff6b6b;
+        }
+
+        .timeline {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+
+        .post {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .post:hover {
+            background-color: #f8f9fa;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .post-meta {
+            flex: 1;
+        }
+
+        .username {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .post-content {
+            margin-bottom: 1rem;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .post-actions-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .like-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .like-btn:hover {
+            background-color: #fee;
+            color: #e63946;
+        }
+
+        .like-btn.liked {
+            color: #e63946;
+            background-color: #fee;
+        }
+
+        .user-info {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .current-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .navigation {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .share-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 20px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .share-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #8b4513;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        .profile-section {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            font-size: 3rem;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .ranking-section {
+            padding: 2rem;
+        }
+
+        .ranking-list {
+            list-style: none;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .rank-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .rank-number.gold {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #8b4513;
+        }
+
+        .rank-number.silver {
+            background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+            color: #444;
+        }
+
+        .rank-number.bronze {
+            background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+            color: white;
+        }
+
+        .users-section {
+            padding: 2rem;
+        }
+
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .user-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .empty-timeline {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+        }
+
+        .switch-form a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .quick-login {
+            background: #28a745;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-login:hover {
+            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                box-shadow: none;
+            }
+
+            .auth-section {
+                padding: 1rem;
+            }
+
+            .post-form {
+                padding: 1rem;
+            }
+
+            .post {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="version" id="app-version">v0.01</div>
+            <h1>🌟 SimpleSNS</h1>
+            <p>シンプルなSNS学習アプリ</p>
+        </div>
+
+        <!-- ログイン・登録画面 -->
+        <div id="auth-section" class="auth-section">
+            <div id="login-form" class="auth-form">
+                <h2>ログイン</h2>
+                <div class="form-group">
+                    <label for="login-username">ユーザー名</label>
+                    <input type="text" id="login-username" placeholder="ユーザー名を入力">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">パスワード</label>
+                    <input type="password" id="login-password" placeholder="パスワードを入力">
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="remember-me" checked>
+                    <label for="remember-me">次回から自動ログイン</label>
+                </div>
+                <button id="quick-login-btn" class="btn quick-login" onclick="quickLogin()" style="display: none;">📝 前回のユーザーでログイン</button>
+                <button class="btn" onclick="login()">ログイン</button>
+                <div class="switch-form">
+                    アカウントをお持ちでない方は <a href="#" onclick="showRegister()">新規登録</a>
+                </div>
+            </div>
+
+            <div id="register-form" class="auth-form" style="display: none;">
+                <h2>新規登録</h2>
+                <div class="form-group">
+                    <label for="register-username">ユーザー名</label>
+                    <input type="text" id="register-username" placeholder="ユーザー名を入力（3文字以上）">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">パスワード</label>
+                    <input type="password" id="register-password" placeholder="パスワードを入力（6文字以上）">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm">パスワード確認</label>
+                    <input type="password" id="register-confirm" placeholder="パスワードを再入力">
+                </div>
+                <button class="btn" onclick="register()">新規登録</button>
+                <div class="switch-form">
+                    すでにアカウントをお持ちの方は <a href="#" onclick="showLogin()">ログイン</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインアプリ画面 -->
+        <div id="main-app" class="main-app">
+            <div class="user-info">
+                <div class="current-user">
+                    <div class="user-avatar" id="current-user-avatar"></div>
+                    <div>
+                        <span id="current-username"></span>
+                        <span id="current-user-badge" class="user-badge"></span>
+                        <div id="current-user-stats" class="user-stats"></div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">ログアウト</button>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-btn active" onclick="showSection('timeline')">🏠 ホーム</button>
+                <button class="nav-btn" onclick="showSection('profile')">👤 プロフィール</button>
+                <button class="nav-btn" onclick="showSection('ranking')">🏆 ランキング</button>
+                <button class="nav-btn" onclick="showSection('users')">👥 ユーザー</button>
+            </div>
+
+
+            <div id="timeline-section">
+                <div class="post-form">
+                    <textarea id="post-content" class="post-textarea" placeholder="今何してる？"></textarea>
+                    <div class="post-actions">
+                        <div class="char-count" id="char-count">0/280</div>
+                        <button class="btn" onclick="createPost()" style="width: auto; padding: 0.5rem 1.5rem;">投稿</button>
+                    </div>
+                </div>
+
+                <div id="timeline" class="timeline">
+                    <div class="empty-timeline">
+                        <h3>📝 タイムラインが空です</h3>
+                        <p>最初の投稿をしてみましょう！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-section" class="profile-section" style="display: none;">
+                <div class="profile-avatar" id="profile-avatar"></div>
+                <h2 id="profile-username"></h2>
+                <span id="profile-badge" class="user-badge"></span>
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="profile-posts">0</div>
+                        <div class="stat-label">投稿数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="profile-likes">0</div>
+                        <div class="stat-label">もらったいいね</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="profile-days">0</div>
+                        <div class="stat-label">利用日数</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ranking-section" class="ranking-section" style="display: none;">
+                <h2>🏆 ランキング</h2>
+                <h3>投稿数ランキング</h3>
+                <ul id="post-ranking" class="ranking-list"></ul>
+                <h3>いいね数ランキング</h3>
+                <ul id="like-ranking" class="ranking-list"></ul>
+            </div>
+
+            <div id="users-section" class="users-section" style="display: none;">
+                <h2>👥 ユーザー一覧</h2>
+                <div id="user-grid" class="user-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // データ管理
+        let currentUser = null;
+        let posts = [];
+        let users = {};
+        let currentSection = 'timeline';
+        let appVersion = '0.01';
+
+        // 初期化
+        function init() {
+            loadData();
+            initializeSampleData();
+            setupEventListeners();
+            checkAuthStatus();
+        }
+
+        // データの読み込み
+        function loadData() {
+            const savedUsers = localStorage.getItem('sns-users');
+            const savedPosts = localStorage.getItem('sns-posts');
+            const savedCurrentUser = localStorage.getItem('sns-current-user');
+
+            if (savedUsers) {
+                users = JSON.parse(savedUsers);
+            }
+            if (savedPosts) {
+                posts = JSON.parse(savedPosts);
+            }
+            if (savedCurrentUser) {
+                currentUser = JSON.parse(savedCurrentUser);
+            }
+        }
+
+        // サンプルデータの初期化
+        function initializeSampleData() {
+            // ローカルストレージをクリアしてサンプルデータを強制的に作成
+            console.log('Initializing sample data...');
+
+            // 既にデータがある場合でも再初期化（テスト用）
+            // if (Object.keys(users).length > 0) return;
+
+            // サンプルユーザーを作成
+            const sampleUsers = [
+                { username: 'ai_lover', password: 'password123' },
+                { username: 'tech_guru', password: 'password123' },
+                { username: 'daily_life', password: 'password123' }
+            ];
+
+            const baseTime = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7日前
+
+            sampleUsers.forEach((user, index) => {
+                users[user.username] = {
+                    username: user.username,
+                    password: user.password,
+                    createdAt: new Date(baseTime + index * 1000).toISOString()
+                };
+            });
+
+            // サンプル投稿を作成
+            const samplePosts = [
+                { username: 'ai_lover', content: 'AIの進歩がすごいですね！ChatGPTを使って仕事の効率が上がりました 🤖', time: -6 },
+                { username: 'tech_guru', content: 'プログラミング学習中です。JavaScriptのPromiseについて理解が深まりました 💻', time: -5 },
+                { username: 'daily_life', content: '今日は美味しいラーメンを食べました！幸せ〜 🍜', time: -4 },
+                { username: 'ai_lover', content: '機械学習の勉強を始めました。数学が思ったより大変... 📚', time: -3 },
+                { username: 'tech_guru', content: 'レスポンシブデザインを実装中。CSSグリッドが便利ですね', time: -2 },
+                { username: 'daily_life', content: 'おはようございます！今日も一日頑張りましょう ☀️', time: -1 },
+                { username: 'ai_lover', content: 'SNSアプリを作ってみたいと思います。どの技術スタックがおすすめでしょうか？', time: 0 }
+            ];
+
+            samplePosts.forEach((postData, index) => {
+                const post = {
+                    id: baseTime + index * 1000 + Math.floor(postData.time * 60 * 60 * 1000),
+                    username: postData.username,
+                    content: postData.content,
+                    timestamp: new Date(Date.now() + postData.time * 60 * 60 * 1000).toISOString(),
+                    likes: []
+                };
+
+                // ランダムにいいねを追加
+                const allUsers = Object.keys(users);
+                const likeCount = Math.floor(Math.random() * 3);
+                for (let i = 0; i < likeCount; i++) {
+                    const randomUser = allUsers[Math.floor(Math.random() * allUsers.length)];
+                    if (!post.likes.includes(randomUser)) {
+                        post.likes.push(randomUser);
+                    }
+                }
+
+                posts.unshift(post);
+            });
+
+            saveData();
+        }
+
+        // データの保存
+        function saveData() {
+            localStorage.setItem('sns-users', JSON.stringify(users));
+            localStorage.setItem('sns-posts', JSON.stringify(posts));
+            localStorage.setItem('sns-current-user', JSON.stringify(currentUser));
+        }
+
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // エンターキーでログイン
+            document.getElementById('login-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+
+            // エンターキーで登録
+            document.getElementById('register-confirm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    register();
+                }
+            });
+
+            // 投稿文字数カウント
+            document.getElementById('post-content').addEventListener('input', function() {
+                const content = this.value;
+                const charCount = document.getElementById('char-count');
+                charCount.textContent = `${content.length}/280`;
+
+                if (content.length > 280) {
+                    charCount.classList.add('warning');
+                } else {
+                    charCount.classList.remove('warning');
+                }
+            });
+
+            // Ctrl+Enterで投稿
+            document.getElementById('post-content').addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    createPost();
+                }
+            });
+        }
+
+        // 認証状態チェック
+        function checkAuthStatus() {
+            if (currentUser) {
+                showMainApp();
+            } else {
+                showAuthSection();
+                setupQuickLogin();
+            }
+        }
+
+        // クイックログイン設定
+        function setupQuickLogin() {
+            const lastUsername = localStorage.getItem('sns-last-username');
+            const rememberMe = localStorage.getItem('sns-remember-me') === 'true';
+
+            if (lastUsername && rememberMe) {
+                document.getElementById('login-username').value = lastUsername;
+                document.getElementById('login-password').value = 'password123'; // サンプル用
+
+                const quickLoginBtn = document.getElementById('quick-login-btn');
+                quickLoginBtn.style.display = 'block';
+                quickLoginBtn.innerHTML = `📝 ${lastUsername} でログイン`;
+            }
+        }
+
+        // クイックログイン
+        function quickLogin() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (username && password) {
+                login();
+            }
+        }
+
+        // 登録画面表示
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+
+        // ログイン画面表示
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+
+        // 認証セクション表示
+        function showAuthSection() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('main-app').style.display = 'none';
+        }
+
+        // メインアプリ表示
+        function showMainApp() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+
+            // ユーザー情報表示
+            const avatar = document.getElementById('current-user-avatar');
+            const username = document.getElementById('current-username');
+
+            avatar.textContent = currentUser.username.charAt(0).toUpperCase();
+            username.textContent = currentUser.username;
+
+            // ユーザー統計を更新
+            updateUserStats();
+
+            // タイムライン更新
+            renderTimeline();
+
+            // デフォルトセクション表示
+            showSection('timeline');
+        }
+
+        // 新規登録
+        function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+
+            // バリデーション
+            if (username.length < 3) {
+                alert('ユーザー名は3文字以上で入力してください');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('パスワードは6文字以上で入力してください');
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('パスワードが一致しません');
+                return;
+            }
+
+            if (users[username]) {
+                alert('このユーザー名は既に使用されています');
+                return;
+            }
+
+            // ユーザー作成
+            users[username] = {
+                username: username,
+                password: password,
+                createdAt: new Date().toISOString()
+            };
+
+            currentUser = users[username];
+
+            // 自動ログイン設定を保存
+            localStorage.setItem('sns-last-username', username);
+            localStorage.setItem('sns-remember-me', 'true');
+
+            saveData();
+            incrementVersion();
+
+            alert('登録が完了しました！');
+            showMainApp();
+        }
+
+        // ログイン
+        function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                alert('ユーザー名とパスワードを入力してください');
+                return;
+            }
+
+            const user = users[username];
+            if (!user || user.password !== password) {
+                alert('ユーザー名またはパスワードが間違っています');
+                return;
+            }
+
+            currentUser = user;
+
+            // 記憶設定を保存
+            const rememberMe = document.getElementById('remember-me').checked;
+            if (rememberMe) {
+                localStorage.setItem('sns-last-username', username);
+                localStorage.setItem('sns-remember-me', 'true');
+            } else {
+                localStorage.removeItem('sns-last-username');
+                localStorage.removeItem('sns-remember-me');
+            }
+
+            saveData();
+            incrementVersion();
+            showMainApp();
+        }
+
+        // ログアウト
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                currentUser = null;
+                localStorage.removeItem('sns-current-user');
+
+                // フォームをクリア（記憶設定がある場合は最後のユーザー名は残す）
+                const rememberMe = localStorage.getItem('sns-remember-me') === 'true';
+                if (!rememberMe) {
+                    document.getElementById('login-username').value = '';
+                    document.getElementById('login-password').value = '';
+                }
+                document.getElementById('post-content').value = '';
+                document.getElementById('char-count').textContent = '0/280';
+
+                showAuthSection();
+                setupQuickLogin();
+            }
+        }
+
+        // 投稿作成
+        function createPost() {
+            const content = document.getElementById('post-content').value.trim();
+
+            if (!content) {
+                alert('投稿内容を入力してください');
+                return;
+            }
+
+            if (content.length > 280) {
+                alert('投稿は280文字以内で入力してください');
+                return;
+            }
+
+            const post = {
+                id: Date.now(),
+                username: currentUser.username,
+                content: content,
+                timestamp: new Date().toISOString(),
+                likes: []
+            };
+
+            posts.unshift(post);
+            saveData();
+            incrementVersion();
+
+            // フォームをクリア
+            document.getElementById('post-content').value = '';
+            document.getElementById('char-count').textContent = '0/280';
+
+            renderTimeline();
+        }
+
+        // タイムライン描画
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+
+            if (posts.length === 0) {
+                timeline.innerHTML = `
+                    <div class="empty-timeline">
+                        <h3>📝 タイムラインが空です</h3>
+                        <p>最初の投稿をしてみましょう！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            timeline.innerHTML = posts.map(post => {
+                const userBadge = getUserBadge(post.username);
+                return `
+                <div class="post">
+                    <div class="post-header">
+                        <div class="user-avatar">${post.username.charAt(0).toUpperCase()}</div>
+                        <div class="post-meta">
+                            <div class="username">
+                                ${post.username}
+                                ${userBadge ? `<span class="user-badge">${userBadge}</span>` : ''}
+                            </div>
+                            <div class="timestamp">${formatTimestamp(post.timestamp)}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    <div class="post-actions-bar">
+                        <button class="like-btn ${post.likes.includes(currentUser.username) ? 'liked' : ''}"
+                                onclick="toggleLike(${post.id})">
+                            ❤️ ${post.likes.length > 0 ? post.likes.length : ''}
+                        </button>
+                        <button class="share-btn" onclick="sharePost(${post.id})">
+                            📤 シェア
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // いいね機能
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const username = currentUser.username;
+            const likeIndex = post.likes.indexOf(username);
+
+            if (likeIndex === -1) {
+                // いいねを追加
+                post.likes.push(username);
+            } else {
+                // いいねを削除
+                post.likes.splice(likeIndex, 1);
+            }
+
+            saveData();
+            incrementVersion();
+            updateUserStats();
+            renderTimeline();
+        }
+
+        // タイムスタンプのフォーマット
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) {
+                return `${days}日前`;
+            } else if (hours > 0) {
+                return `${hours}時間前`;
+            } else if (minutes > 0) {
+                return `${minutes}分前`;
+            } else {
+                return '今';
+            }
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // セクション表示制御
+        function showSection(section) {
+            currentSection = section;
+
+            // すべてのセクションを非表示
+            document.getElementById('timeline-section').style.display = 'none';
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('ranking-section').style.display = 'none';
+            document.getElementById('users-section').style.display = 'none';
+
+            // ナビゲーションボタンの状態をリセット
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // アクティブなセクションを表示
+            document.getElementById(section + '-section').style.display = 'block';
+
+            // アクティブボタンを設定（event.targetの代わりに直接指定）
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.textContent.includes(section === 'timeline' ? 'ホーム' :
+                    section === 'profile' ? 'プロフィール' :
+                    section === 'ranking' ? 'ランキング' : 'ユーザー')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // セクションに応じて内容を更新
+            switch(section) {
+                case 'timeline':
+                    renderTimeline();
+                    break;
+                case 'profile':
+                    showProfile();
+                    break;
+                case 'ranking':
+                    showRanking();
+                    break;
+                case 'users':
+                    showUsers();
+                    break;
+            }
+        }
+
+        // プロフィール表示
+        function showProfile() {
+            const avatar = document.getElementById('profile-avatar');
+            const username = document.getElementById('profile-username');
+            const badge = document.getElementById('profile-badge');
+            const postsCount = document.getElementById('profile-posts');
+            const likesCount = document.getElementById('profile-likes');
+            const daysCount = document.getElementById('profile-days');
+
+            avatar.textContent = currentUser.username.charAt(0).toUpperCase();
+            username.textContent = currentUser.username;
+            badge.textContent = getUserBadge(currentUser.username);
+
+            const stats = getUserStats(currentUser.username);
+            postsCount.textContent = stats.posts;
+            likesCount.textContent = stats.likes;
+            daysCount.textContent = stats.days;
+        }
+
+        // ランキング表示
+        function showRanking() {
+            const postRanking = document.getElementById('post-ranking');
+            const likeRanking = document.getElementById('like-ranking');
+
+            // ユーザー統計を取得
+            const userStats = Object.keys(users).map(username => ({
+                username,
+                ...getUserStats(username)
+            }));
+
+            // 投稿数ランキング
+            const postRankingData = [...userStats].sort((a, b) => b.posts - a.posts);
+            postRanking.innerHTML = postRankingData.map((user, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                return `
+                    <li class="ranking-item">
+                        <div class="rank-number ${rankClass}">${index + 1}</div>
+                        <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                        <div style="flex: 1; margin-left: 1rem;">
+                            <div class="username">${user.username}</div>
+                            <div style="color: #666; font-size: 0.9rem;">${user.posts}投稿</div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+
+            // いいね数ランキング
+            const likeRankingData = [...userStats].sort((a, b) => b.likes - a.likes);
+            likeRanking.innerHTML = likeRankingData.map((user, index) => {
+                const rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+                return `
+                    <li class="ranking-item">
+                        <div class="rank-number ${rankClass}">${index + 1}</div>
+                        <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                        <div style="flex: 1; margin-left: 1rem;">
+                            <div class="username">${user.username}</div>
+                            <div style="color: #666; font-size: 0.9rem;">${user.likes}いいね</div>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // ユーザー一覧表示
+        function showUsers() {
+            const userGrid = document.getElementById('user-grid');
+
+            userGrid.innerHTML = Object.keys(users).map(username => {
+                const stats = getUserStats(username);
+                const badge = getUserBadge(username);
+                return `
+                    <div class="user-card">
+                        <div class="user-avatar" style="margin: 0 auto 1rem; width: 60px; height: 60px; font-size: 1.5rem;">
+                            ${username.charAt(0).toUpperCase()}
+                        </div>
+                        <h3>${username}</h3>
+                        ${badge ? `<div class="user-badge">${badge}</div>` : ''}
+                        <div style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                            <div>${stats.posts}投稿 • ${stats.likes}いいね</div>
+                            <div>利用${stats.days}日目</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ユーザー統計を取得
+        function getUserStats(username) {
+            const userPosts = posts.filter(post => post.username === username);
+            const totalLikes = userPosts.reduce((sum, post) => sum + post.likes.length, 0);
+
+            const user = users[username];
+            const createdDate = new Date(user.createdAt);
+            const today = new Date();
+            const daysDiff = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24)) + 1;
+
+            return {
+                posts: userPosts.length,
+                likes: totalLikes,
+                days: daysDiff
+            };
+        }
+
+        // ユーザーバッジを取得
+        function getUserBadge(username) {
+            const stats = getUserStats(username);
+
+            if (stats.posts >= 10) return '🏆 投稿王';
+            if (stats.likes >= 10) return '⭐ 人気者';
+            if (stats.posts >= 5) return '📝 アクティブ';
+            if (stats.days >= 7) return '🎯 継続者';
+            return null;
+        }
+
+        // 現在のユーザー統計を更新
+        function updateUserStats() {
+            const statsDiv = document.getElementById('current-user-stats');
+            const badgeSpan = document.getElementById('current-user-badge');
+
+            const stats = getUserStats(currentUser.username);
+            const badge = getUserBadge(currentUser.username);
+
+            statsDiv.textContent = `${stats.posts}投稿 • ${stats.likes}いいね`;
+            badgeSpan.textContent = badge || '';
+            badgeSpan.style.display = badge ? 'inline' : 'none';
+        }
+
+        // 投稿シェア機能
+        function sharePost(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const shareText = `${post.username}さんの投稿: "${post.content}" - SimpleSNSより`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'SimpleSNS投稿シェア',
+                    text: shareText
+                });
+            } else {
+                // フォールバック: クリップボードにコピー
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('投稿内容をクリップボードにコピーしました！');
+                }).catch(() => {
+                    alert('シェア機能はサポートされていません');
+                });
+            }
+        }
+
+        // バージョン管理
+        function incrementVersion() {
+            const currentVer = parseFloat(appVersion);
+            appVersion = (currentVer + 0.01).toFixed(2);
+            document.getElementById('app-version').textContent = `v${appVersion}`;
+            localStorage.setItem('sns-app-version', appVersion);
+        }
+
+        function loadVersion() {
+            const savedVersion = localStorage.getItem('sns-app-version');
+            if (savedVersion) {
+                appVersion = savedVersion;
+            }
+            document.getElementById('app-version').textContent = `v${appVersion}`;
+        }
+
+        // DOMContentLoaded後に確実に初期化実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                init();
+                loadVersion();
+            });
+        } else {
+            init();
+            loadVersion();
+        }
+    </script>
+</body>
+</html>
